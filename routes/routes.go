@@ -16,11 +16,18 @@ func SetupRouter() *gin.Engine {
 	// API Grouping (v1)
 	v1 := r.Group("/api/v1")
 	{
+		// Order Endpoints
 		orders := v1.Group("/orders")
 		{
 			orders.POST("", handlers.CreateOrder)       // POST /api/v1/orders
 			orders.GET("", handlers.GetAllOrders)       // GET  /api/v1/orders
 			orders.GET("/:id", handlers.GetOrderByID)   // GET  /api/v1/orders/:id
+		}
+
+		// Webhook Endpoints
+		webhooks := v1.Group("/webhooks")
+		{
+			webhooks.POST("/payment", handlers.PaymentWebhook) // POST /api/v1/webhooks/payment
 		}
 	}
 
