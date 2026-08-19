@@ -12,3 +12,10 @@ type Order struct {
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
+
+// CreateOrderInput adalah Data Transfer Object (DTO) untuk validasi request payload saat membuat pesanan baru
+type CreateOrderInput struct {
+	CustomerName string  `json:"customer_name" binding:"required,min=3,max=100"`
+	ItemName     string  `json:"item_name" binding:"required,min=2,max=150"`
+	Amount       float64 `json:"amount" binding:"required,gt=0"`
+}
