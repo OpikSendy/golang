@@ -15,42 +15,51 @@ import (
 // DB adalah instance global GORM yang bisa diakses oleh handlers/services
 var DB *gorm.DB
 
-// ConnectDatabase menginisialisasi koneksi PostgreSQL dan menjalankan Auto-Migration
+// ConnectDatabase menginisialisasi koneksi PostgreSQL (Mendukung DATABASE_URL Cloud & DB_* Lokal)
 func ConnectDatabase() {
-	host := os.Getenv("DB_HOST")
-	if host == "" {
-		host = "localhost"
-	}
-	user := os.Getenv("DB_USER")
-	if user == "" {
-		user = "postgres"
-	}
-	password := os.Getenv("DB_PASSWORD")
-	if password == "" {
-		password = "postgres"
-	}
-	dbname := os.Getenv("DB_NAME")
-	if dbname == "" {
-		dbname = "mini_order_db"
-	}
-	port := os.Getenv("DB_PORT")
-	if port == "" {
-		port = "5433"
-	}
-	sslmode := os.Getenv("DB_SSLMODE")
-	if sslmode == "" {
-		sslmode = "disable"
-	}
-	timezone := os.Getenv("DB_TIMEZONE")
-	if timezone == "" {
-		timezone = "Asia/Jakarta"
-	}
+	databaseURL := os.Getenv("DATABASE_URL")
+	var dsn string
 
-	// Data Source Name (DSN) format untuk PostgreSQL
-	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
-		host, user, password, dbname, port, sslmode, timezone,
-	)
+	if databaseURL != "" {
+		// Mode Cloud (Railway / Render / Supabase / Neon)
+		dsn = databaseURL
+		log.Println("🌐 Menggunakan koneksi DATABASE_URL dari Cloud Environment")
+	} else {
+		// Mode Lokal (Fallback ke variabel DB_*)
+		host := os.Getenv("DB_HOST")
+		if host == "" {
+			host = "localhost"
+		}
+		user := os.Getenv("DB_USER")
+		if user == "" {
+			user = "postgres"
+		}
+		password := os.Getenv("DB_PASSWORD")
+		if password == "" {
+			password = "postgres"
+		}
+		dbname := os.Getenv("DB_NAME")
+		if dbname == "" {
+			dbname = "mini_order_db"
+		}
+		port := os.Getenv("DB_PORT")
+		if port == "" {
+			port = "5433"
+		}
+		sslmode := os.Getenv("DB_SSLMODE")
+		if sslmode == "" {
+			sslmode = "disable"
+		}
+		timezone := os.Getenv("DB_TIMEZONE")
+		if timezone == "" {
+			timezone = "Asia/Jakarta"
+		}
+
+		dsn = fmt.Sprintf(
+			"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
+			host, user, password, dbname, port, sslmode, timezone,
+		)
+	}
 
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
@@ -63,7 +72,7 @@ func ConnectDatabase() {
 
 	log.Println("✅ Berhasil terhubung ke Database PostgreSQL!")
 
-	// Menjalankan Auto-Migration untuk membuat/memperbarui tabel orders
+	// Menjalankan Auto-Migration
 	err = DB.AutoMigrate(&models.Order{})
 	if err != nil {
 		log.Fatalf("❌ Gagal menjalankan AutoMigrate: %v", err)

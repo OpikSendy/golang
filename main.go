@@ -11,9 +11,9 @@ import (
 )
 
 func main() {
-	// 1. Muat environment variable dari file .env
+	// 1. Muat environment variable dari file .env jika di lokal
 	if err := godotenv.Load(); err != nil {
-		log.Println("⚠️ File .env tidak ditemukan, menggunakan konfigurasi default")
+		log.Println("ℹ️ File .env tidak ditemukan, membaca konfigurasi dari sistem/Railway environment")
 	}
 
 	// 2. Inisialisasi koneksi Database PostgreSQL & Auto-Migrate GORM
@@ -22,13 +22,16 @@ func main() {
 	// 3. Inisialisasi router Gin
 	r := routes.SetupRouter()
 
-	// 4. Tentukan port & jalankan server
-	port := os.Getenv("APP_PORT")
+	// 4. Railway & Cloud provider otomatis inject env PORT. Fallback ke APP_PORT atau 8080.
+	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = os.Getenv("APP_PORT")
+		if port == "" {
+			port = "8080"
+		}
 	}
 
-	log.Printf("🚀 Server aktif di http://localhost:%s\n", port)
+	log.Printf("🚀 Server aktif di port :%s\n", port)
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("Gagal menjalankan server: %v", err)
 	}
